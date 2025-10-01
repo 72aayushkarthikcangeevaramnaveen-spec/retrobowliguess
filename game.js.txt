@@ -1,0 +1,106 @@
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let score = 0;
+let ball = { x: 300, y: 350, radius: 10, dx: 0, dy: 0, thrown: false };
+let receiver = { x: Math.random() * 500 + 50, y: 50, width: 40, height: 20 };
+let gameOver = false;
+
+function drawField() {
+ctx.fillStyle = '#0a7c3a';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+ctx.strokeStyle = '#fff';
+ctx.lineWidth = 2;
+for (let i = 0; i <= 400; i += 50) {
+ctx.beginPath();
+ctx.moveTo(0, i);
+ctx.lineTo(600, i);
+ctx.stroke();
+}
+}
+
+function drawBall() {
+ctx.beginPath();
+ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+ctx.fillStyle = '#f9a602';
+ctx.fill();
+ctx.closePath();
+}
+
+function drawReceiver() {
+ctx.fillStyle = '#fff';
+ctx.fillRect(receiver.x, receiver.y, receiver.width, receiver.height);
+}
+
+function updateBall() {
+if (ball.thrown) {
+ball.x += ball.dx;
+ball.y += ball.dy;
+if (ball.x < 0 || ball.x > canvas.width || ball.y < 0 || ball.y > canvas.height) {
+gameOver = true;
+}
+// Check for catch
+if (
+ball.x > receiver.x &&
+ball.x < receiver.x + receiver.width &&
+ball.y > receiver.y &&
+ball.y < receiver.y + receiver.height
+) {
+score++;
+document.getElementById('score').innerText = 'Score: ' + score;
+resetBallAndReceiver();
+}
+}
+}
+
+function resetBallAndReceiver() {
+ball.x = 300;
+ball.y = 350;
+ball.dx = 0;
+ball.dy = 0;
+ball.thrown = false;
+receiver.x = Math.random() * 500 + 50;
+receiver.y = 50;
+gameOver = false;
+}
+
+function draw() {
+drawField();
+drawReceiver();
+drawBall();
+}
+
+function gameLoop() {
+if (!gameOver) {
+updateBall();
+draw();
+requestAnimationFrame(gameLoop);
+} else {
+ctx.font = '30px Courier New';
+ctx.fillStyle = '#fff';
+ctx.fillText('Game Over!', 220, 200);
+}
+}
+
+canvas.addEventListener('click', function(e) {
+if (!ball.thrown && !gameOver) {
+// Calculate direction
+const rect = canvas.getBoundingClientRect();
+const mouseX = e.clientX - rect.left;
+const mouseY = e.clientY - rect.top;
+const angle = Math.atan2(mouseY - ball.y, mouseX - ball.x);
+ball.dx = Math.cos(angle) * 7;
+ball.dy = Math.sin(angle) * 7;
+ball.thrown = true;
+}
+});
+
+function restartGame() {
+score = 0;
+document.getElementById('score').innerText = 'Score: 0';
+resetBallAndReceiver();
+draw();
+gameLoop();
+}
+
+draw();
+gameLoop();
